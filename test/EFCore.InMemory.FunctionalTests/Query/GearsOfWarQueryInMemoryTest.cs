@@ -12,5 +12,23 @@ namespace Microsoft.EntityFrameworkCore.Query
         {
             //TestLoggerFactory.TestOutputHelper = testOutputHelper;
         }
+
+        public override void Concat_with_collection_navigations()
+        {
+            base.Concat_with_collection_navigations();
+        }
+
+
+        public override void Select_subquery_distinct_firstordefault()
+        {
+            base.Select_subquery_distinct_firstordefault();
+        }
+
+
+
+        public override void Select_correlated_filtered_collection()
+        {
+            base.Select_correlated_filtered_collection();
+        }
     }
 }

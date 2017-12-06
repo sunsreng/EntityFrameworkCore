@@ -2,6 +2,8 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using JetBrains.Annotations;
@@ -74,8 +76,19 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                     Expression.Constant(node.Name));
             }
 
+            // TODO: ???
+            if (node.Name.StartsWith("_outer_", StringComparison.Ordinal))
+            {
+                return Expression.Call(
+                    GetParameterValueMethodInfo.MakeGenericMethod(node.Type),
+                    EntityQueryModelVisitor.QueryContextParameter,
+                    Expression.Constant(node.Name));
+            }
+
             return node;
         }
+
+        private Dictionary<ParameterExpression, Expression> _parameterMapping = new Dictionary<ParameterExpression, Expression>();
 
         /// <summary>
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
@@ -91,6 +104,42 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                 return newCaller != nullConditionalExpression.Caller
                        || newAccessOperation != nullConditionalExpression.AccessOperation
                     ? new NullConditionalExpression(newCaller, newAccessOperation)
+                    : node;
+            }
+
+            if (node is InjectParametersExpression injectParametersExpression)
+            {
+                var modified = false;
+
+                var newParameters = injectParametersExpression.Parameters;
+                //var newParameters = new List<ParameterExpression>();
+                //foreach (var parameter in injectParametersExpression.Parameters)
+                //{
+                //    var newParameter = (ParameterExpression)Visit(parameter);
+                //    newParameters.Add(newParameter);
+                //    if (newParameter != parameter)
+                //    {
+                //        modified = true;
+                //    }
+                //}
+
+                var newParameterValues = new List<Expression>();
+                foreach (var parameterValue in injectParametersExpression.ParameterValues)
+                {
+                    var newParameterValue = Visit(parameterValue);
+                    newParameterValues.Add(newParameterValue);
+                    if (newParameterValue != parameterValue)
+                    {
+                        modified = true;
+                    }
+                }
+
+                _parameterMapping = newParameters.Zip(newParameterValues, (p, v) => new { p, v }).ToDictionary(e => e.p, e => e.v);
+
+                var newQuery = Visit(injectParametersExpression.Query);
+
+                return modified || newQuery != injectParametersExpression.Query
+                    ? new InjectParametersExpression(newParameters, newParameterValues, newQuery)
                     : node;
             }
 

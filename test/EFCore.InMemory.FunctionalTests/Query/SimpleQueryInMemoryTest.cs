@@ -16,5 +16,23 @@ namespace Microsoft.EntityFrameworkCore.Query
         {
             //TestLoggerFactory.TestOutputHelper = testOutputHelper;
         }
+
+        public override void Outer_parameter_in_selector()
+        {
+            base.Outer_parameter_in_selector();
+        }
+
+
+        public override void SelectMany_Joined_DefaultIfEmpty2()
+        {
+            base.SelectMany_Joined_DefaultIfEmpty2();
+        }
+
+
+
+        public override void Contains_with_DateTime_Date()
+        {
+            base.Contains_with_DateTime_Date();
+        }
     }
 }
