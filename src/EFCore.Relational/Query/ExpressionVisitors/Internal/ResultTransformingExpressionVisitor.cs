@@ -60,7 +60,9 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
             }
 
             if (node.Method.MethodIsClosedFormOf(
-                _relationalQueryCompilationContext.QueryMethodProvider.InjectParametersMethod))
+                _relationalQueryCompilationContext.LinqOperatorProvider.InjectParametersMethod))
+                //|| node.Method.MethodIsClosedFormOf(
+                //_relationalQueryCompilationContext.QueryMethodProvider.InjectParametersMethod))
             {
                 var sourceArgument = (MethodCallExpression)Visit(node.Arguments[1]);
 
@@ -71,7 +73,8 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 
                     var newGetResultArgument
                         = Expression.Call(
-                            _relationalQueryCompilationContext.QueryMethodProvider.InjectParametersMethod
+                            _relationalQueryCompilationContext.LinqOperatorProvider.InjectParametersMethod
+                            //_relationalQueryCompilationContext.QueryMethodProvider.InjectParametersMethod
                                 .MakeGenericMethod(typeof(ValueBuffer)),
                             node.Arguments[0],
                             getResultArgument,

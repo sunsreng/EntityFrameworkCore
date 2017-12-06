@@ -246,5 +246,13 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
         Type MakeSequenceType([NotNull] Type elementType);
+
+        /// <summary>
+        ///     Gets the inject parameters method.
+        /// </summary>
+        /// <value>
+        ///     The pre execute method.
+        /// </value>
+        MethodInfo InjectParametersMethod { get; }
     }
 }

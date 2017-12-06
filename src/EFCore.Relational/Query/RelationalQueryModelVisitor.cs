@@ -2081,7 +2081,8 @@ namespace Microsoft.EntityFrameworkCore.Query
             var parameterValueExpressions = new List<Expression>();
 
             if (expression is MethodCallExpression methodCallExpression
-                && methodCallExpression.Method.MethodIsClosedFormOf(QueryCompilationContext.QueryMethodProvider.InjectParametersMethod))
+                && methodCallExpression.Method.MethodIsClosedFormOf(QueryCompilationContext.LinqOperatorProvider.InjectParametersMethod))
+                //&& methodCallExpression.Method.MethodIsClosedFormOf(QueryCompilationContext.QueryMethodProvider.InjectParametersMethod))
             {
                 var existingParameterNamesExpression = (NewArrayExpression)methodCallExpression.Arguments[2];
                 parameterNameExpressions.AddRange(existingParameterNamesExpression.Expressions.Cast<ConstantExpression>());
@@ -2098,7 +2099,8 @@ namespace Microsoft.EntityFrameworkCore.Query
             var elementType = expression.Type.GetTypeInfo().GenericTypeArguments.Single();
 
             return Expression.Call(
-                QueryCompilationContext.QueryMethodProvider.InjectParametersMethod.MakeGenericMethod(elementType),
+                //QueryCompilationContext.QueryMethodProvider.InjectParametersMethod.MakeGenericMethod(elementType),
+                QueryCompilationContext.LinqOperatorProvider.InjectParametersMethod.MakeGenericMethod(elementType),
                 QueryContextParameter,
                 expression,
                 Expression.NewArrayInit(typeof(string), parameterNameExpressions),

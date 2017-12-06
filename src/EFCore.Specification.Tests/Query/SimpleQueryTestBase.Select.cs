@@ -602,5 +602,17 @@ namespace Microsoft.EntityFrameworkCore.Query
                     .Select(e => string.Format("{0}", e.EmployeeID))
                     .Skip(1));
         }
+
+
+        [ConditionalFact]
+        public virtual void Outer_param_stuff()
+        {
+            using (var ctx = CreateContext())
+            {
+                //var id = "Foo";
+                //ctx.Customers./*Where(c => c.CustomerID == id).*/Select(c => c.Orders.Where(o => o.OrderID > 10)).ToList();
+                ctx.Customers.Select(c => c.Orders.Where(o => c.CustomerID != "ALFKI")).ToList();
+            }
+        }
     }
 }
