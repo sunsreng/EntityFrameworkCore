@@ -833,9 +833,9 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
             _stringBuilder.AppendLine("{");
             using (_stringBuilder.Indent())
             {
-                for (var i = 0; i < injectParametersExpression.ParameterNames.Count; i++)
+                for (var i = 0; i < injectParametersExpression.Parameters.Count; i++)
                 {
-                    Visit(injectParametersExpression.ParameterNames[i]);
+                    Visit(injectParametersExpression.Parameters[i]);
                     _stringBuilder.Append(" => ");
                     Visit(injectParametersExpression.ParameterValues[i]);
 

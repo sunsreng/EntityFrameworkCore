@@ -610,7 +610,7 @@ namespace Microsoft.EntityFrameworkCore.Query
             using (var ctx = CreateContext())
             {
                 //var id = "Foo";
-                //ctx.Customers./*Where(c => c.CustomerID == id).*/Select(c => c.Orders.Where(o => o.OrderID > 10)).ToList();
+                //ctx.Customers.Where(c => c.CustomerID == id).Select(c => c).ToList();// c.Orders.Where(o => o.OrderID > 10)).ToList();
                 ctx.Customers.Select(c => c.Orders.Where(o => c.CustomerID != "ALFKI")).ToList();
             }
         }

@@ -3,11 +3,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq.Expressions;
+using System.Reflection;
 using Microsoft.EntityFrameworkCore.Utilities;
 using JetBrains.Annotations;
-using System.Diagnostics;
-using System.Reflection;
 
 namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
 {
@@ -22,17 +22,17 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
         public InjectParametersExpression(
-            [NotNull] IReadOnlyList<Expression> parameterNames,
+            [NotNull] IReadOnlyList<ParameterExpression> parameters,
             [NotNull] IReadOnlyList<Expression> parameterValues,
             [NotNull] Expression query)
         {
-            Check.NotEmpty(parameterNames, nameof(parameterNames));
+            Check.NotEmpty(parameters, nameof(parameters));
             Check.NotEmpty(parameterValues, nameof(parameterValues));
             Check.NotNull(query, nameof(query));
 
-            Debug.Assert(parameterNames.Count == parameterValues.Count);
+            Debug.Assert(parameters.Count == parameterValues.Count);
 
-            ParameterNames = parameterNames;
+            Parameters = parameters;
             ParameterValues = parameterValues;
             Query = query;
         }
@@ -41,7 +41,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.
         /// </summary>
-        public IReadOnlyList<Expression> ParameterNames { get; private set; }
+        public IReadOnlyList<Expression> Parameters { get; private set; }
 
         /// <summary>
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
@@ -84,13 +84,13 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         {
             var expressions = new List<Expression>();
 
-            for (var i = 0; i < ParameterNames.Count; i++)
+            for (var i = 0; i < Parameters.Count; i++)
             {
                 expressions.Add(
                     Call(
                         EntityQueryModelVisitor.QueryContextParameter,
                         _setParameterMethodInfo,
-                        ParameterNames[i],
+                        Parameters[i],
                         ParameterValues[i]));
             }
 
