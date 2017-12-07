@@ -3331,6 +3331,80 @@ FROM [Comments] AS [c]");
 
         #endregion
 
+
+        [Fact]
+        public void Fogfgfgfgfgfgo()
+        {
+            using (var db = new MaumarDbContext())
+            {
+
+                db.Database.EnsureDeleted();
+                db.Database.EnsureCreated();
+
+                //var posts1 = await db.Posts.Include(x => x.Blog).ToListAsync();
+
+                //var posts2 = await db.Posts.Where(x => x.Blog.Title == "Hi").ToListAsync();
+
+                //var blogs3 = await db.Blogs.Include(x => x.Posts).ToListAsync();
+
+                var blogs4 = db.Blogs.Where(x => x.Posts.Any(y => y.Title == "Hi")).ToList();
+            }
+        }
+
+
+
+
+        public interface IBlog
+        {
+            int Id { get; set; }
+            string Url { get; set; }
+            string Title { get; set; }
+            List<IPost> Posts { get; set; }
+        }
+        public class Blog : IBlog
+        {
+            public int Id { get; set; }
+            public string Url { get; set; }
+            public string Title { get; set; }
+            public List<IPost> Posts { get; set; }
+        }
+
+        public interface IPost
+        {
+            int Id { get; set; }
+            string Title { get; set; }
+            string Content { get; set; }
+            int BlogId { get; set; }
+            IBlog Blog { get; set; }
+        }
+        public class Post : IPost
+        {
+            public int Id { get; set; }
+            public string Title { get; set; }
+            public string Content { get; set; }
+            public int BlogId { get; set; }
+            public IBlog Blog { get; set; }
+        }
+
+        public class MaumarDbContext : DbContext
+        {
+            public DbSet<Blog> Blogs { get; set; }
+            public DbSet<Post> Posts { get; set; }
+
+
+            protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
+            {
+                optionsBuilder.UseSqlServer(@"Server=.;Database=Repro7123;Trusted_Connection=True;MultipleActiveResultSets=True");
+            }
+
+            protected override void OnModelCreating(ModelBuilder modelBuilder)
+            {
+                //modelBuilder.Entity<Blog>().ToTable("Blog");
+                //modelBuilder.Entity<Post>().ToTable("Post");
+                modelBuilder.Entity<Blog>().HasMany(typeof(Post), "Posts").WithOne("Blog").HasForeignKey("BlogId");
+            }
+        }
+
         private DbContextOptions _options;
 
         private SqlServerTestStore CreateTestStore<TContext>(

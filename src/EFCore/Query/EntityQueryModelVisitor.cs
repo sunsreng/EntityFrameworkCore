@@ -169,8 +169,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                 QueryCompilationContext.FindQuerySourcesRequiringMaterialization(this, queryModel);
                 QueryCompilationContext.DetermineQueryBufferRequirement(queryModel);
 
-                var injectParametersExpressionVisitor = new InjectParametersExpressionVisitor();
-                injectParametersExpressionVisitor.QueryModelVisitor.VisitQueryModel(queryModel);
+                //var injectParametersExpressionVisitor = new InjectParametersExpressionVisitor();
+                //injectParametersExpressionVisitor.QueryModelVisitor.VisitQueryModel(queryModel);
 
                 VisitQueryModel(queryModel);
 
