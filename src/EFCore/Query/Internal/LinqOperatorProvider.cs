@@ -757,9 +757,13 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                 .GetTypeInfo()
                 .GetDeclaredMethod(nameof(_InjectParameters));
 
+        /// <summary>
+        ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
+        ///     directly from your code. This API may change or be removed in future releases.
+        /// </summary>
         [UsedImplicitly]
         // ReSharper disable once InconsistentNaming
-        private static IEnumerable<TElement> _InjectParameters<TElement>(
+        public static IEnumerable<TElement> _InjectParameters<TElement>(
             QueryContext queryContext,
             IEnumerable<TElement> source,
             string[] parameterNames,

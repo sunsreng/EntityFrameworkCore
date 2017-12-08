@@ -8,6 +8,7 @@ using System.Linq.Expressions;
 using System.Reflection;
 using Microsoft.EntityFrameworkCore.Utilities;
 using JetBrains.Annotations;
+using System.Linq;
 
 namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
 {
@@ -82,21 +83,45 @@ namespace Microsoft.EntityFrameworkCore.Query.Expressions.Internal
         /// </summary>
         public override Expression Reduce()
         {
-            var expressions = new List<Expression>();
+            var foo = typeof(Query.Internal.LinqOperatorProvider).GetTypeInfo().GetDeclaredMethod(nameof(EntityFrameworkCore.Query.Internal.LinqOperatorProvider._InjectParameters));
 
-            for (var i = 0; i < Parameters.Count; i++)
-            {
-                expressions.Add(
-                    Call(
-                        EntityQueryModelVisitor.QueryContextParameter,
-                        _setParameterMethodInfo,
-                        Constant(Parameters[i].Name),
-                        ParameterValues[i]));
-            }
+            var generic = foo.MakeGenericMethod(Query.Type);
 
-            expressions.Add(Query);
+            var methodcall = Expression.Call(
+                generic,
+                EntityQueryModelVisitor.QueryContextParameter,
+                Query,
+                Expression.NewArrayInit(typeof(string), Parameters.Select(p => Constant(p.Name))),
+                Expression.NewArrayInit(typeof(object), ParameterValues));
 
-            return Block(expressions);
+
+            return methodcall;
+
+
+
+
+
+
+
+
+            //InjectParametersMethod
+
+
+            //var expressions = new List<Expression>();
+
+            //for (var i = 0; i < Parameters.Count; i++)
+            //{
+            //    expressions.Add(
+            //        Call(
+            //            EntityQueryModelVisitor.QueryContextParameter,
+            //            _setParameterMethodInfo,
+            //            Constant(Parameters[i].Name),
+            //            ParameterValues[i]));
+            //}
+
+            //expressions.Add(Query);
+
+            //return Block(expressions);
         }
 
         /// <summary>
