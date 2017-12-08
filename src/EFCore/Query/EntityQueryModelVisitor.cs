@@ -710,6 +710,11 @@ namespace Microsoft.EntityFrameworkCore.Query
         }
 
         /// <summary>
+        ///     TODO: write something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        /// </summary>
+        public virtual List<IQuerySource> DeclaredQuerySources { get; private set; } = new List<IQuerySource>();
+
+        /// <summary>
         ///     Visits the <see cref="MainFromClause" /> node.
         /// </summary>
         /// <param name="fromClause"> The node being visited. </param>
@@ -735,6 +740,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                     fromClause.ItemName);
 
             QueryCompilationContext.AddOrUpdateMapping(fromClause, CurrentParameter);
+
+            DeclaredQuerySources.Add(fromClause);
         }
 
         /// <summary>
@@ -794,6 +801,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                         innerItemParameter));
 
             IntroduceTransparentScope(fromClause, queryModel, index, transparentIdentifierType);
+
+            DeclaredQuerySources.Add(fromClause);
         }
 
         /// <summary>
@@ -866,6 +875,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                         innerItemParameter));
 
             IntroduceTransparentScope(joinClause, queryModel, index, transparentIdentifierType);
+
+            DeclaredQuerySources.Add(joinClause);
         }
 
         /// <summary>
@@ -944,6 +955,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                         innerItemsParameter));
 
             IntroduceTransparentScope(groupJoinClause, queryModel, index, transparentIdentifierType);
+
+            DeclaredQuerySources.Add(groupJoinClause);
         }
 
         /// <summary>
@@ -1584,6 +1597,180 @@ namespace Microsoft.EntityFrameworkCore.Query
 
                         return default(object);
                     });
+        }
+
+        #endregion
+
+        #region Outer parameter binding
+
+        /// <summary>
+        ///     Bind a member to a parameter from the outer query.
+        /// </summary>
+        /// <param name="memberExpression"> The expression to bind. </param>
+        /// <returns> The bound expression. </returns>
+        public virtual Expression BindMemberToOuterQueryParameter(
+            [NotNull] MemberExpression memberExpression)
+            => BindMemberExpression(
+                memberExpression,
+                null,
+                (property, qs) => BindPropertyToOuterParameter(qs, property, true));
+
+
+        /// <summary>
+        ///     Bind a method call  to a parameter from the outer query.
+        /// </summary>
+        /// <param name="methodCallExpression"> The expression to bind. </param>
+        /// <returns> The bound expression. </returns>
+        public virtual Expression BindMethodToOuterQueryParameter(
+            [NotNull] MethodCallExpression methodCallExpression)
+        {
+            Check.NotNull(methodCallExpression, nameof(methodCallExpression));
+
+            return BindMethodCallExpression<Expression>(
+                methodCallExpression,
+                null,
+                (property, qs) => BindPropertyToOuterParameter(qs, property, false));
+        }
+
+        /// <summary>
+        ///     TODO: write something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        /// </summary>
+        protected const string OuterQueryParameterNamePrefix = @"_outer_";
+
+
+
+
+
+
+
+        private readonly Dictionary<string, Expression> _injectedParameters = new Dictionary<string, Expression>();
+
+
+
+
+
+
+        /// <summary>
+        ///     TODO: write something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        /// </summary>
+        /// <param name="querySource">TODO: write something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</param>
+        /// <param name="property">TODO: write something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</param>
+        /// <param name="isMemberExpression">TODO: write something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</param>
+        /// <returns>TODO: write something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</returns>
+        protected virtual ParameterExpression BindPropertyToOuterParameter(IQuerySource querySource, IProperty property, bool isMemberExpression)
+        {
+            if (querySource != null
+                )//&& ParentQueryModelVisitor != null)
+            {
+                var isBindable = CanBindToParentUsingOuterParameter(querySource);
+
+                // binding to grouping qsre - it's safe to do using outer parameter, even though it's client GroupJoin
+                if (!isBindable
+                    && querySource is MainFromClause mainFromClause
+                    && mainFromClause.FromExpression is QuerySourceReferenceExpression mainClauseQsre
+                    && mainClauseQsre.ReferencedQuerySource is GroupJoinClause groupJoinClause)
+                {
+                    isBindable = CanBindToParentUsingOuterParameter(groupJoinClause);
+                }
+
+                if (isBindable)
+                {
+                    var parameterName = OuterQueryParameterNamePrefix + property.Name;
+                    var parameterWithSamePrefixCount
+                        = QueryCompilationContext.ParentQueryReferenceParameters.Count(p => p.StartsWith(parameterName, StringComparison.Ordinal));
+
+                    if (parameterWithSamePrefixCount > 0)
+                    {
+                        parameterName += parameterWithSamePrefixCount;
+                    }
+
+                    QueryCompilationContext.ParentQueryReferenceParameters.Add(parameterName);
+
+                    var querySourceReference = new QuerySourceReferenceExpression(querySource);
+                    var propertyExpression = isMemberExpression
+                        ? querySourceReference.CreateEFPropertyExpression(property.PropertyInfo)
+                        : querySourceReference.CreateEFPropertyExpression(property);
+
+                    if (propertyExpression.Type.GetTypeInfo().IsValueType)
+                    {
+                        propertyExpression = Expression.Convert(propertyExpression, typeof(object));
+                    }
+
+                    _injectedParameters[parameterName] = propertyExpression;
+
+                    Expression
+                        = CreateInjectParametersExpression(
+                            Expression,
+                            new Dictionary<string, Expression> { [parameterName] = propertyExpression });
+
+                    return Expression.Parameter(
+                        property.ClrType,
+                        parameterName);
+                }
+            }
+
+            return null;
+        }
+
+        /// <summary>
+        ///     TODO: write somethinig !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+        /// </summary>
+        /// <param name="querySource">TODO: write somethinig !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</param>
+        /// <returns>TODO: write somethinig !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</returns>
+        protected virtual bool CanBindToParentUsingOuterParameter(IQuerySource querySource)
+             => true;
+
+        private Expression CreateInjectParametersExpression(Expression expression, Dictionary<string, Expression> parameters)
+        {
+            var parameterNameExpressions = new List<ConstantExpression>();
+            var parameterValueExpressions = new List<Expression>();
+
+            if (expression is MethodCallExpression methodCallExpression
+                && methodCallExpression.Method.MethodIsClosedFormOf(QueryCompilationContext.LinqOperatorProvider.InjectParametersMethod))
+            {
+                var existingParameterNamesExpression = (NewArrayExpression)methodCallExpression.Arguments[2];
+                parameterNameExpressions.AddRange(existingParameterNamesExpression.Expressions.Cast<ConstantExpression>());
+
+                var existingParameterValuesExpression = (NewArrayExpression)methodCallExpression.Arguments[3];
+                parameterValueExpressions.AddRange(existingParameterValuesExpression.Expressions);
+
+                expression = methodCallExpression.Arguments[1];
+            }
+
+            parameterNameExpressions.AddRange(parameters.Keys.Select(Expression.Constant));
+            parameterValueExpressions.AddRange(parameters.Values);
+
+            var elementType = expression.Type.GetTypeInfo().GenericTypeArguments.Single();
+
+            return Expression.Call(
+                QueryCompilationContext.LinqOperatorProvider.InjectParametersMethod.MakeGenericMethod(elementType),
+                QueryContextParameter,
+                expression,
+                Expression.NewArrayInit(typeof(string), parameterNameExpressions),
+                Expression.NewArrayInit(typeof(object), parameterValueExpressions));
+        }
+
+        /// <summary>
+        ///     Lifts the outer parameters injected into a subquery into the query
+        ///     expression that is being built by this query model visitor, so that
+        ///     the subquery can be lifted.
+        /// </summary>
+        /// <param name="subQueryModelVisitor"> The query model visitor for the subquery being lifted. </param>
+        public virtual void LiftInjectedParameters([NotNull] EntityQueryModelVisitor subQueryModelVisitor)
+        {
+            Check.NotNull(subQueryModelVisitor, nameof(subQueryModelVisitor));
+
+            if (!subQueryModelVisitor._injectedParameters.Any())
+            {
+                return;
+            }
+
+            foreach (var pair in subQueryModelVisitor._injectedParameters)
+            {
+                _injectedParameters[pair.Key] = pair.Value;
+            }
+
+            Expression = CreateInjectParametersExpression(Expression, subQueryModelVisitor._injectedParameters);
         }
 
         #endregion

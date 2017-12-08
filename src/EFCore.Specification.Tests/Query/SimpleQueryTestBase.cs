@@ -4099,5 +4099,24 @@ namespace Microsoft.EntityFrameworkCore.Query
             AssertQuery<Customer>(cs => cs.OrderBy(c => !list.Contains(c.CustomerID)),
                 entryCount: 91);
         }
+
+        [ConditionalFact]
+        public virtual void Inject_parameters_in_select()
+        {
+            using (var ctx = CreateContext())
+            {
+                var query = from c in ctx.Customers
+                            select (from o in ctx.Orders
+                                    where c.CustomerID == o.CustomerID
+                                    select o);
+
+                var result = query.ToList();
+
+                foreach (var r in result)
+                {
+                    r.ToList();
+                }
+            }
+        }
     }
 }

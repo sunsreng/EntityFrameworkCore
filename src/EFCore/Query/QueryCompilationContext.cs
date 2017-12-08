@@ -61,6 +61,8 @@ namespace Microsoft.EntityFrameworkCore.Query
             LinqOperatorProvider = linqOperatorProvider;
             ContextType = dependencies.CurrentContext.Context.GetType();
             TrackQueryResults = trackQueryResults;
+
+            ParentQueryReferenceParameters = new List<string>();
         }
 
         /// <summary>
@@ -110,6 +112,14 @@ namespace Microsoft.EntityFrameworkCore.Query
         ///     The query source mapping.
         /// </value>
         public virtual QuerySourceMapping QuerySourceMapping { get; } = new QuerySourceMapping();
+
+        /// <summary>
+        ///     Gets the list of parameter names that represent reference to a parent query.
+        /// </summary>
+        /// <value>
+        ///     The list of parameter names that represent reference to a parent query.
+        /// </value>
+        public virtual IList<string> ParentQueryReferenceParameters { get; }
 
         /// <summary>
         ///     Gets the entity type mapped to the given query source

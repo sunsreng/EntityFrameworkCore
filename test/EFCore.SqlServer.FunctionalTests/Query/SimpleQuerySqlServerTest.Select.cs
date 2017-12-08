@@ -559,5 +559,13 @@ FROM [Employees] AS [e]
 ORDER BY [e].[EmployeeID]
 OFFSET @__p_0 ROWS");
         }
+
+        public override void Inject_parameters_in_select()
+        {
+            base.Inject_parameters_in_select();
+
+            AssertSql(
+                @"");
+        }
     }
 }

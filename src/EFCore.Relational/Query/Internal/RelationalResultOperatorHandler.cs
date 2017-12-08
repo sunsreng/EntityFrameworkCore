@@ -409,7 +409,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
                 }
 
                 if (methodCallExpression.Method.MethodIsClosedFormOf(
-                    _relationalQueryCompilationContext.QueryMethodProvider.InjectParametersMethod))
+                    _relationalQueryCompilationContext.LinqOperatorProvider.InjectParametersMethod))
                 {
                     var newSource = VisitMethodCall((MethodCallExpression)methodCallExpression.Arguments[1]);
 

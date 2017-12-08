@@ -262,6 +262,16 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
         /// </summary>
         protected override Expression VisitMember(MemberExpression node)
         {
+            if (node.Expression is QuerySourceReferenceExpression qsre
+                && !_queryModelVisitor.DeclaredQuerySources.Contains(qsre.ReferencedQuerySource))
+            {
+                var foo = _queryModelVisitor.BindMemberToOuterQueryParameter(node);
+                if (foo != null)
+                {
+                    return foo;
+                }
+            }
+
             var newExpression = Visit(node.Expression);
 
             if (newExpression != node.Expression)

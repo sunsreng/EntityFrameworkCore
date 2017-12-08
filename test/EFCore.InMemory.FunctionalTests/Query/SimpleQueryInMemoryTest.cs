@@ -16,5 +16,10 @@ namespace Microsoft.EntityFrameworkCore.Query
         {
             //TestLoggerFactory.TestOutputHelper = testOutputHelper;
         }
+
+        public override void Inject_parameters_in_select()
+        {
+            base.Inject_parameters_in_select();
+        }
     }
 }
