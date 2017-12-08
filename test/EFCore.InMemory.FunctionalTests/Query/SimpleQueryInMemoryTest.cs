@@ -17,9 +17,9 @@ namespace Microsoft.EntityFrameworkCore.Query
             //TestLoggerFactory.TestOutputHelper = testOutputHelper;
         }
 
-        public override void Outer_param_stuff()
+        public override void Outer_parameter_in_selector()
         {
-            base.Outer_param_stuff();
+            base.Outer_parameter_in_selector();
         }
     }
 }

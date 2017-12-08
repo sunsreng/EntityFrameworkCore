@@ -603,16 +603,44 @@ namespace Microsoft.EntityFrameworkCore.Query
                     .Skip(1));
         }
 
+        [ConditionalFact]
+        public virtual void Outer_parameter_in_selector()
+        {
+            AssertQuery<Customer, Order>(
+                (cs, os) =>
+                    from c in cs
+                    orderby c.CustomerID
+                    select new
+                    {
+                        c.CustomerID,
+                        Subquery = (from o in os
+                                    where o.CustomerID == c.CustomerID
+                                    select o)
+                    },
+                assertOrder: true,
+                elementAsserter: (e, a) =>
+                {
+                    Assert.Equal(e.CustomerID, a.CustomerID);
+                    CollectionAsserter<Order>(ee => e.OrderID, (ee, aa) => Assert.Equal(ee.OrderID, aa.OrderID))(e.Subquery, a.Subquery);
+                });
+
+            //using (var ctx = CreateContext())
+            //{
+            //    var query = ctx.Customers.OrderBy(c => c.CustomerID).Select(c => c.Orders.Where(o => c.CustomerID != "ALFKI"));
+            //    var result = query.ToList();
+            //}
+        }
 
         [ConditionalFact]
-        public virtual void Outer_param_stuff()
+        public virtual void Outer_parameter_in_join_key()
         {
             using (var ctx = CreateContext())
             {
-                //var id = "Foo";
-                //ctx.Customers.Where(c => c.CustomerID == id).Select(c => c).ToList();// c.Orders.Where(o => o.OrderID > 10)).ToList();
                 ctx.Customers.Select(c => c.Orders.Where(o => c.CustomerID != "ALFKI")).ToList();
             }
+
+
+
         }
     }
 }

@@ -77,7 +77,7 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
             }
 
             // TODO: ???
-            if (_parameterMapping.TryGetValue(node, out var value))
+            if (node.Name.StartsWith("_outer_", StringComparison.Ordinal))
             {
                 return Expression.Call(
                     GetParameterValueMethodInfo.MakeGenericMethod(node.Type),
@@ -111,16 +111,17 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
             {
                 var modified = false;
 
-                var newParameters = new List<ParameterExpression>();
-                foreach (var parameter in injectParametersExpression.Parameters)
-                {
-                    var newParameter = (ParameterExpression)Visit(parameter);
-                    newParameters.Add(newParameter);
-                    if (newParameter != parameter)
-                    {
-                        modified = true;
-                    }
-                }
+                var newParameters = injectParametersExpression.Parameters;
+                //var newParameters = new List<ParameterExpression>();
+                //foreach (var parameter in injectParametersExpression.Parameters)
+                //{
+                //    var newParameter = (ParameterExpression)Visit(parameter);
+                //    newParameters.Add(newParameter);
+                //    if (newParameter != parameter)
+                //    {
+                //        modified = true;
+                //    }
+                //}
 
                 var newParameterValues = new List<Expression>();
                 foreach (var parameterValue in injectParametersExpression.ParameterValues)
