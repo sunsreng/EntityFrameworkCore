@@ -4103,20 +4103,30 @@ namespace Microsoft.EntityFrameworkCore.Query
         [ConditionalFact]
         public virtual void Inject_parameters_in_select()
         {
-            using (var ctx = CreateContext())
-            {
-                var query = from c in ctx.Customers
-                            select (from o in ctx.Orders
-                                    where c.CustomerID == o.CustomerID
-                                    select o);
+            AssertQuery<Customer, Order>(
+                (cs, os) =>
+                    from c in cs
+                    orderby c.CustomerID
+                    select (from o in os
+                            where c.CustomerID == o.CustomerID
+                            select o),
+                assertOrder: true,
+                elementAsserter: (e, a) => CollectionAsserter<Order>(ee => ee.OrderID, (ee, aa) => Assert.Equal(ee.OrderID, aa.OrderID)));
+              
+            //using (var ctx = CreateContext())
+            //{
+            //    var query = from c in ctx.Customers
+            //                select (from o in ctx.Orders
+            //                        where c.CustomerID == o.CustomerID
+            //                        select o);
 
-                var result = query.ToList();
+            //    var result = query.ToList();
 
-                foreach (var r in result)
-                {
-                    r.ToList();
-                }
-            }
+            //    foreach (var r in result)
+            //    {
+            //        r.ToList();
+            //    }
+            //}
         }
     }
 }

@@ -78,9 +78,11 @@ namespace Microsoft.EntityFrameworkCore.Query
         /// </summary>
         /// <param name="dependencies"> Parameter object containing dependencies for this service. </param>
         /// <param name="queryCompilationContext"> The <see cref="QueryCompilationContext" /> to be used when processing the query. </param>
+        /// <param name="parentQueryModelVisitor">TODO: write a comment !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</param>
         protected EntityQueryModelVisitor(
             [NotNull] EntityQueryModelVisitorDependencies dependencies,
-            [NotNull] QueryCompilationContext queryCompilationContext)
+            [NotNull] QueryCompilationContext queryCompilationContext,
+            [CanBeNull] EntityQueryModelVisitor parentQueryModelVisitor)
         {
             Check.NotNull(dependencies, nameof(dependencies));
             Check.NotNull(queryCompilationContext, nameof(queryCompilationContext));
@@ -105,7 +107,17 @@ namespace Microsoft.EntityFrameworkCore.Query
             _filterApplyingExpressionVisitor
                 = new FilterApplyingExpressionVisitor(
                     _queryCompilationContext, dependencies.QueryModelGenerator);
+
+            ParentQueryModelVisitor = parentQueryModelVisitor;
         }
+
+        /// <summary>
+        ///     Gets the parent query model visitor, or null if there is no parent.
+        /// </summary>
+        /// <value>
+        ///     The parent query model visitor, or null if there is no parent.
+        /// </value>
+        public virtual EntityQueryModelVisitor ParentQueryModelVisitor { get; }
 
         /// <summary>
         ///     Gets the expression that represents this query.
@@ -1659,8 +1671,18 @@ namespace Microsoft.EntityFrameworkCore.Query
         /// <returns>TODO: write something !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!</returns>
         protected virtual ParameterExpression BindPropertyToOuterParameter(IQuerySource querySource, IProperty property, bool isMemberExpression)
         {
-            if (querySource != null
-                )//&& ParentQueryModelVisitor != null)
+            if (querySource == null)
+            {
+                return null;
+            }
+
+            //if (!DeclaredQuerySources.Contains(querySource))
+            //{
+            //    return ParentQueryModelVisitor?.BindPropertyToOuterParameter(querySource, property, isMemberExpression);
+            //}
+
+            //if (querySource != null
+            //    )//&& ParentQueryModelVisitor != null)
             {
                 var isBindable = CanBindToParentUsingOuterParameter(querySource);
 

@@ -23,10 +23,19 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
         /// </summary>
         public InMemoryQueryModelVisitor(
             [NotNull] EntityQueryModelVisitorDependencies dependencies,
-            [NotNull] QueryCompilationContext queryCompilationContext)
-            : base(dependencies, queryCompilationContext)
+            [NotNull] QueryCompilationContext queryCompilationContext,
+            [CanBeNull] InMemoryQueryModelVisitor parentQueryModelVisitor)
+            : base(dependencies, queryCompilationContext, parentQueryModelVisitor)
         {
         }
+
+        /// <summary>
+        ///     Gets the parent query model visitor, or null if there is no parent.
+        /// </summary>
+        /// <value>
+        ///     The parent query model visitor, or null if there is no parent.
+        /// </value>
+        public new InMemoryQueryModelVisitor ParentQueryModelVisitor => (InMemoryQueryModelVisitor)base.ParentQueryModelVisitor;
 
         /// <summary>
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used

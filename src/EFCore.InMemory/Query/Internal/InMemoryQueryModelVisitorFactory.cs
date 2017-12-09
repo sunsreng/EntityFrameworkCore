@@ -31,6 +31,7 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
             EntityQueryModelVisitor parentEntityQueryModelVisitor)
             => new InMemoryQueryModelVisitor(
                 Dependencies,
-                Check.NotNull(queryCompilationContext, nameof(queryCompilationContext)));
+                Check.NotNull(queryCompilationContext, nameof(queryCompilationContext)),
+                (InMemoryQueryModelVisitor)parentEntityQueryModelVisitor);
     }
 }

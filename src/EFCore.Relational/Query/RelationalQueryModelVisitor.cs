@@ -71,14 +71,15 @@ namespace Microsoft.EntityFrameworkCore.Query
             [CanBeNull] RelationalQueryModelVisitor parentQueryModelVisitor)
             : base(
                 dependencies.With(Check.NotNull(relationalDependencies, nameof(relationalDependencies)).RelationalResultOperatorHandler),
-                queryCompilationContext)
+                queryCompilationContext,
+                parentQueryModelVisitor)
         {
             _sqlTranslatingExpressionVisitorFactory = relationalDependencies.SqlTranslatingExpressionVisitorFactory;
             _compositePredicateExpressionVisitorFactory = relationalDependencies.CompositePredicateExpressionVisitorFactory;
             _conditionalRemovingExpressionVisitorFactory = relationalDependencies.ConditionalRemovingExpressionVisitorFactory;
 
             ContextOptions = relationalDependencies.ContextOptions;
-            ParentQueryModelVisitor = parentQueryModelVisitor;
+            //ParentQueryModelVisitor = parentQueryModelVisitor;
         }
 
         /// <summary>
@@ -219,7 +220,7 @@ namespace Microsoft.EntityFrameworkCore.Query
         /// <value>
         ///     The parent query model visitor, or null if there is no parent.
         /// </value>
-        public virtual RelationalQueryModelVisitor ParentQueryModelVisitor { get; }
+        public new RelationalQueryModelVisitor ParentQueryModelVisitor => (RelationalQueryModelVisitor)base.ParentQueryModelVisitor;
 
         /// <summary>
         ///     Registers a sub query visitor.

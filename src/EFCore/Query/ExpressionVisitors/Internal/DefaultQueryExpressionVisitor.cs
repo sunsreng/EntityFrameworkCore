@@ -74,6 +74,14 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
                     Expression.Constant(node.Name));
             }
 
+            if (node.Name.StartsWith("_outer_"))
+            {
+                return Expression.Call(
+                    GetParameterValueMethodInfo.MakeGenericMethod(node.Type),
+                    EntityQueryModelVisitor.QueryContextParameter,
+                    Expression.Constant(node.Name));
+            }
+
             return node;
         }
 

@@ -12,5 +12,12 @@ namespace Microsoft.EntityFrameworkCore.Query
         {
             //TestLoggerFactory.TestOutputHelper = testOutputHelper;
         }
+
+
+        public override void Navigation_accessed_twice_outside_and_inside_subquery()
+        {
+            base.Navigation_accessed_twice_outside_and_inside_subquery();
+        }
+
     }
 }
