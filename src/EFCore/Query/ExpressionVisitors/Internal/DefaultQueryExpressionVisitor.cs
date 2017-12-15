@@ -90,6 +90,54 @@ namespace Microsoft.EntityFrameworkCore.Query.ExpressionVisitors.Internal
 
         private Dictionary<ParameterExpression, Expression> _parameterMapping = new Dictionary<ParameterExpression, Expression>();
 
+
+        /// <summary>
+        ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
+        ///     directly from your code. This API may change or be removed in future releases.
+        /// </summary>
+        protected override Expression VisitMethodCall(MethodCallExpression node)
+        {
+            if (node.Method.Name.Contains("_InjectParameters"))
+            {
+                var newArguments = new List<Expression>();
+                foreach (var argument in node.Arguments)
+                {
+                    var newArgument = Visit(argument);
+                    newArguments.Add(newArgument);
+                }
+
+                if (newArguments[1].Type != node.Arguments[1].Type)
+                {
+                    var newType = newArguments[1].Type.GenericTypeArguments[0];
+
+                    var newMethod = _entityQueryModelVisitor.QueryCompilationContext.LinqOperatorProvider.InjectParametersMethod.MakeGenericMethod(newType);
+
+                    return Expression.Call(newMethod, newArguments);
+                }
+            }
+
+            if (node.Method.Name == "_ToQueryable")
+            {
+                var newArguments = new List<Expression>();
+                foreach (var argument in node.Arguments)
+                {
+                    var newArgument = Visit(argument);
+                    newArguments.Add(newArgument);
+                }
+
+                if (newArguments[0].Type != node.Arguments[0].Type)
+                {
+                    var newType = newArguments[0].Type.GenericTypeArguments[0];
+
+                    var newMethod = _entityQueryModelVisitor.QueryCompilationContext.LinqOperatorProvider.ToQueryable.MakeGenericMethod(newType);
+
+                    return Expression.Call(newMethod, newArguments);
+                }
+            }
+
+            return base.VisitMethodCall(node);
+        }
+
         /// <summary>
         ///     This API supports the Entity Framework Core infrastructure and is not intended to be used
         ///     directly from your code. This API may change or be removed in future releases.

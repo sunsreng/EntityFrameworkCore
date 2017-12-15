@@ -278,7 +278,6 @@ namespace Microsoft.EntityFrameworkCore.Query
             _queryOptimizer.Optimize(QueryCompilationContext, queryModel);
 
             new NondeterministicResultCheckingVisitor(QueryCompilationContext.Logger).VisitQueryModel(queryModel);
-            queryModel.TransformExpressions(new SubqueryUniquefyingExpressionVisitor().Visit);
 
             // Rewrite includes/navigations
 
@@ -601,6 +600,9 @@ namespace Microsoft.EntityFrameworkCore.Query
                         memberExpression,
                         out var parameter))
                 {
+                    // hack
+                    _queryModelMappings[_currentQueryModel].Add(new KeyValuePair<Expression, ParameterExpression>(memberExpression, parameter));
+
                     return parameter;
                 }
 
@@ -618,6 +620,9 @@ namespace Microsoft.EntityFrameworkCore.Query
                         methodCallExpression,
                         out var parameter))
                 {
+                    // hack
+                    _queryModelMappings[_currentQueryModel].Add(new KeyValuePair<Expression, ParameterExpression>(methodCallExpression, parameter));
+
                     return parameter;
                 }
 
@@ -652,6 +657,11 @@ namespace Microsoft.EntityFrameworkCore.Query
                 return type.GetTypeInfo().GetInterfaces().Any(i => i.IsGenericType && i.GetGenericTypeDefinition() == typeof(IEnumerable<>));
             }
 
+            private QueryModel _currentQueryModel;
+
+            private Dictionary<QueryModel, List<KeyValuePair<Expression, ParameterExpression>>> _queryModelMappings
+                = new Dictionary<QueryModel, List<KeyValuePair<Expression, ParameterExpression>>>();
+
             protected override Expression VisitSubQuery(SubQueryExpression expression)
             {
                 var previousScope = _accessibleParameterMappingScope;
@@ -660,12 +670,27 @@ namespace Microsoft.EntityFrameworkCore.Query
                 {
                     _accessibleParameterMappingScope = QueryModelVisitor.MappingScope;
 
-                    QueryModelVisitor.VisitQueryModel(expression.QueryModel);
+                    var previousQueryModel = _currentQueryModel;
+                    _currentQueryModel = expression.QueryModel;
 
-                    var mappingsForCurrentScope = Foo(_accessibleParameterMappingScope);// _accessibleParameterMappingScope.ParameterMappings.SelectMany(m => m.Value);
+                    if (!_queryModelMappings.ContainsKey(_currentQueryModel))
+                    {
+                        _queryModelMappings[expression.QueryModel] = new List<KeyValuePair<Expression, ParameterExpression>>();
+
+                        QueryModelVisitor.VisitQueryModel(expression.QueryModel);
+                    }
+
+                    //var mappingsForCurrentScope = Foo(_accessibleParameterMappingScope);// _accessibleParameterMappingScope.ParameterMappings.SelectMany(m => m.Value);
+
+                    var mappingsForCurrentScope = _queryModelMappings[_currentQueryModel];
+
+                    _currentQueryModel = previousQueryModel;
+
+
+
                     if (mappingsForCurrentScope.Any())
                     {
-                        try
+                        //try
                         {
                             if (IsIEnumerable(expression.Type)
                                 && expression.Type != typeof(string)
@@ -673,7 +698,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                             {
                                 var methodInfo = _queryCompilationContext.LinqOperatorProvider.InjectParametersMethod;
 
-                                var generic = methodInfo.MakeGenericMethod(expression.QueryModel.SelectClause.Selector.Type);
+                                //var generic = methodInfo.MakeGenericMethod(expression.QueryModel.SelectClause.Selector.Type);
+                                var generic = methodInfo.MakeGenericMethod(expression.Type.GetGenericArguments()[0]);
 
                                 var expressions = new List<Expression>();
 
@@ -696,7 +722,8 @@ namespace Microsoft.EntityFrameworkCore.Query
 
                                 if (methodcall.Type != expression.Type)
                                 {
-                                    var ffff = _queryCompilationContext.LinqOperatorProvider.ToQueryable.MakeGenericMethod(expression.QueryModel.SelectClause.Selector.Type);
+                                    //var ffff = _queryCompilationContext.LinqOperatorProvider.ToQueryable.MakeGenericMethod(expression.QueryModel.SelectClause.Selector.Type);
+                                    var ffff = _queryCompilationContext.LinqOperatorProvider.ToQueryable.MakeGenericMethod(expression.Type.GetGenericArguments()[0]);
                                     return Expression.Call(ffff, methodcall, QueryContextParameter);
                                 }
 
@@ -774,13 +801,13 @@ namespace Microsoft.EntityFrameworkCore.Query
                             //    mappingsForCurrentScope.Select(m => m.Key).ToList().AsReadOnly(),
                             //    expression);
                         }
-                        finally
-                        {
-                            foreach (var mapping in _accessibleParameterMappingScope.ParameterMappings)
-                            {
-                                mapping.Value.Clear();
-                            }
-                        }
+                        //finally
+                        //{
+                        //    foreach (var mapping in _accessibleParameterMappingScope.ParameterMappings)
+                        //    {
+                        //        mapping.Value.Clear();
+                        //    }
+                        //}
                     }
 
                     return expression;
@@ -849,22 +876,24 @@ namespace Microsoft.EntityFrameworkCore.Query
                 Func<TClause, Expression> clauseExpressionGetter)
                 where TClause : IClause
             {
-                var mappingsForCurrentScope = MappingScope.ParameterMappings.SelectMany(m => m.Value);
-                if (mappingsForCurrentScope.Any())
-                {
-                    var clauseExpression = clauseExpressionGetter(clause);
-                    clauseExpressionSetter(
-                        clause,
-                        new InjectParametersExpression(
-                            mappingsForCurrentScope.Select(m => m.Value).ToList().AsReadOnly(),
-                            mappingsForCurrentScope.Select(m => m.Key).ToList().AsReadOnly(),
-                            clauseExpression));
+                // we can't add these at the clause level - needs to be added direcly before subquery, so that we enumeate it with correct parameter values
 
-                    foreach (var mapping in MappingScope.ParameterMappings)
-                    {
-                        mapping.Value.Clear();
-                    }
-                }
+                //var mappingsForCurrentScope = MappingScope.ParameterMappings.SelectMany(m => m.Value);
+                //if (mappingsForCurrentScope.Any())
+                //{
+                //    var clauseExpression = clauseExpressionGetter(clause);
+                //    clauseExpressionSetter(
+                //        clause,
+                //        new InjectParametersExpression(
+                //            mappingsForCurrentScope.Select(m => m.Value).ToList().AsReadOnly(),
+                //            mappingsForCurrentScope.Select(m => m.Key).ToList().AsReadOnly(),
+                //            clauseExpression));
+
+                //    foreach (var mapping in MappingScope.ParameterMappings)
+                //    {
+                //        mapping.Value.Clear();
+                //    }
+                //}
             }
         }
 

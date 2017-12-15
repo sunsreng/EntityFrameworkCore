@@ -262,6 +262,5 @@ namespace Microsoft.EntityFrameworkCore.Query.Internal
         ///     The pre execute method.
         /// </value>
         MethodInfo InjectParametersScalarMethod { get; }
-
     }
 }

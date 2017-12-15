@@ -34,5 +34,19 @@ namespace Microsoft.EntityFrameworkCore.Query
         {
             base.Contains_with_DateTime_Date();
         }
+
+
+        public override void Complex_query_with_repeated_nested_query_model_compiles_correctly()
+        {
+            base.Complex_query_with_repeated_nested_query_model_compiles_correctly();
+        }
+
+        public override void Select_nested_collection_deep()
+        {
+            base.Select_nested_collection_deep();
+        }
+
+
+
     }
 }

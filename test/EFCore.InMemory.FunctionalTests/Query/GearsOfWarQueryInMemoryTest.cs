@@ -30,5 +30,11 @@ namespace Microsoft.EntityFrameworkCore.Query
         {
             base.Select_correlated_filtered_collection();
         }
+
+
+        public override void Where_subquery_distinct_singleordefault_boolean()
+        {
+            base.Where_subquery_distinct_singleordefault_boolean();
+        }
     }
 }

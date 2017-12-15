@@ -39,8 +39,13 @@ namespace Microsoft.EntityFrameworkCore.Query
         }
 
 
+        public override void Where_subquery_on_navigation2()
+        {
+            base.Where_subquery_on_navigation2();
+        }
 
-        
+
+
 
     }
 }

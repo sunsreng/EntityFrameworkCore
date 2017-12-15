@@ -621,14 +621,8 @@ namespace Microsoft.EntityFrameworkCore.Query
                 elementAsserter: (e, a) =>
                 {
                     Assert.Equal(e.CustomerID, a.CustomerID);
-                    CollectionAsserter<Order>(ee => e.OrderID, (ee, aa) => Assert.Equal(ee.OrderID, aa.OrderID))(e.Subquery, a.Subquery);
+                    CollectionAsserter<Order>(ee => ee.OrderID, (ee, aa) => Assert.Equal(ee.OrderID, aa.OrderID))(e.Subquery, a.Subquery);
                 });
-
-            //using (var ctx = CreateContext())
-            //{
-            //    var query = ctx.Customers.OrderBy(c => c.CustomerID).Select(c => c.Orders.Where(o => c.CustomerID != "ALFKI"));
-            //    var result = query.ToList();
-            //}
         }
 
         [ConditionalFact]
