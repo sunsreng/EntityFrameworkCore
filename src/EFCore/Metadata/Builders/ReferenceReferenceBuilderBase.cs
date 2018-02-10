@@ -82,8 +82,8 @@ namespace Microsoft.EntityFrameworkCore.Metadata.Builders
                 ForeignKey.AreCompatible(
                     foreignKey.PrincipalEntityType,
                     foreignKey.DeclaringEntityType,
-                    foreignKey.DependentToPrincipal?.PropertyInfo,
-                    foreignKey.PrincipalToDependent?.PropertyInfo,
+                    foreignKey.DependentToPrincipal?.GetDefiningMemberInfo(),
+                    foreignKey.PrincipalToDependent?.GetDefiningMemberInfo(),
                     _foreignKeyProperties,
                     _principalKeyProperties,
                     foreignKey.IsUnique,
